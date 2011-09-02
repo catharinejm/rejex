@@ -24,6 +24,7 @@ int find_match_index(char *string, char *match) {
     } else if (in_match) {
       in_match = false;
       m_cur = match;
+      m_idx = -1;
     }
   }
 
