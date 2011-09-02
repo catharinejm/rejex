@@ -31,11 +31,31 @@ int find_match_index(char *string, char *match) {
   return m_idx;
 }
 
+void replace_match(char *result, char *string, char *replace, int match_len, int match_index) {
+  int replace_len = strlen(replace);
+  memset(result, 0, sizeof(result));
+  char *cpy_start = result;
+  memcpy(cpy_start, string, match_index);
+  cpy_start += match_index;
+  memcpy(cpy_start, replace, replace_len);
+  cpy_start += replace_len;
+  char *after_match = string + match_index + match_len;
+  int remaining_len = strlen(string) - match_index - match_len;
+  memcpy(cpy_start, after_match, remaining_len);
+}
+
 int main(int argc, char *argv[]) {
   char *string = argv[1];
   char *match = argv[2];
+  char *replace = argv[3];
 
-  printf("Match at %d\n", find_match_index(string, match));
+  int match_index = find_match_index(string, match);
+  printf("Match at %d\n", match_index);
+
+  char result[strlen(string) + strlen(match)];
+  replace_match(result, string, replace, strlen(match), match_index);
+
+  printf("Result: %s\n", result);
 
   return 0;
 }
