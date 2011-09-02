@@ -3,6 +3,10 @@
 #include <string.h>
 #include <stdbool.h>
 
+bool is_match(char chr, char *m_cur) {
+  return *m_cur == '.' || *m_cur == chr;
+}
+
 int find_match_index(char *string, char *match) {
   int m_idx = -1;
 
@@ -12,7 +16,7 @@ int find_match_index(char *string, char *match) {
       *s_cur != '\0' && !matched;
       ++s_cur) {
 
-    if (*s_cur == *m_cur) {
+  if (is_match(*s_cur, m_cur)) {
       if (!in_match) {
         m_idx = s_cur - string;
         in_match = true;
@@ -42,6 +46,11 @@ void replace_at_index(char *result, char *string, char *replace, int match_index
 }
 
 int main(int argc, char *argv[]) {
+  if (argc < 4) {
+    printf("Usage: %s <string> <match> <replace>\n", argv[0]);
+    return 1;
+  }
+
   char *string = argv[1];
   char *match = argv[2];
   char *replace = argv[3];
