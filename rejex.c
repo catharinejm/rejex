@@ -31,7 +31,7 @@ int find_match_index(char *string, char *match) {
   return m_idx;
 }
 
-void replace_match(char *result, char *string, char *replace, int match_len, int match_index) {
+void replace_at_index(char *result, char *string, char *replace, int match_index, int match_len) {
   memset(result, 0, sizeof(result));
   memcpy(result, string, match_index);
 
@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
   printf("Match at %d\n", match_index);
 
   char result[strlen(string) + (strlen(replace) - strlen(match)) + 1];
-  replace_match(result, string, replace, strlen(match), match_index);
+  replace_at_index(result, string, replace, match_index, strlen(match));
 
   printf("Result: %s\n", result);
 
