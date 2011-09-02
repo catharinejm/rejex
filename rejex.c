@@ -3,6 +3,46 @@
 #include <string.h>
 #include <stdbool.h>
 
+bool is_match(char *input, char *regex) {
+  if (strlen(regex) < 1) return false;
+
+  char *cur = input, *tok1 = regex, *tok2 = regex+1;
+  bool matches = true, escaped = false;
+  while(matches && *tok2) {
+    if ('\\' == *tok1) {
+      if (escaped) {
+        matches = '\\' == *cur;
+        ++cur;
+      }
+
+      escaped = !escaped;
+
+      ++tok1;
+      ++tok2;
+    } else if ('?' == *tok2) {
+      if (*cur == *tok1) ++cur;
+      tok1 += 2;
+      tok2 += 2;
+    } else if ('*' == *tok2) {
+      if (*cur == *tok1) ++cur;
+      else {
+        tok1 += 2;
+        tok2 += 2;
+      }
+    } else {
+      matches = *cur == *tok1;
+      if (*cur) ++cur;
+
+      ++tok1;
+      ++tok2;
+    }
+  }
+
+  matches = *cur == *tok1;
+
+  return matches;
+}
+
 int find_match_index(char *string, char *match) {
   int m_idx = -1;
 
@@ -44,26 +84,18 @@ void replace_at_index(char *result, char *string, char *replace, int match_index
 }
 
 int main(int argc, char *argv[]) {
-  if (argc < 4) {
-    printf("Usage: %s <string> <match> <replace>\n", argv[0]);
+  if (argc < 3) {
+    printf("Usage: %s <string> <regex>\n", argv[0]);
     return 1;
   }
 
   char *string = argv[1];
-  char *match = argv[2];
-  char *replace = argv[3];
+  char *regex = argv[2];
 
-  int match_index = find_match_index(string, match);
-  if (match_index > -1) {
-    printf("Match at %d\n", match_index);
-
-    char result[strlen(string) + (strlen(replace) - strlen(match)) + 1];
-    replace_at_index(result, string, replace, match_index, strlen(match));
-
-    printf("Result: %s\n", result);
-  } else {
-    printf("No match!\n");
-  }
+  if (is_match(string, regex))
+    printf("Matches!\n");
+  else
+    printf("No match...\n");
 
   return 0;
 }
