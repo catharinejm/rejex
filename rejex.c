@@ -3,10 +3,6 @@
 #include <string.h>
 #include <stdbool.h>
 
-bool is_match(char chr, char *m_cur) {
-  return *m_cur == '.' || *m_cur == chr;
-}
-
 int find_match_index(char *string, char *match) {
   int m_idx = -1;
 
@@ -16,7 +12,7 @@ int find_match_index(char *string, char *match) {
       *s_cur != '\0' && !matched;
       ++s_cur) {
 
-  if (is_match(*s_cur, m_cur)) {
+  if (*m_cur == '.' || *m_cur == *s_cur) {
       if (!in_match) {
         m_idx = s_cur - string;
         in_match = true;
@@ -31,6 +27,8 @@ int find_match_index(char *string, char *match) {
       m_idx = -1;
     }
   }
+
+  if (!matched) m_idx = -1;
 
   return m_idx;
 }
@@ -56,12 +54,16 @@ int main(int argc, char *argv[]) {
   char *replace = argv[3];
 
   int match_index = find_match_index(string, match);
-  printf("Match at %d\n", match_index);
+  if (match_index > -1) {
+    printf("Match at %d\n", match_index);
 
-  char result[strlen(string) + (strlen(replace) - strlen(match)) + 1];
-  replace_at_index(result, string, replace, match_index, strlen(match));
+    char result[strlen(string) + (strlen(replace) - strlen(match)) + 1];
+    replace_at_index(result, string, replace, match_index, strlen(match));
 
-  printf("Result: %s\n", result);
+    printf("Result: %s\n", result);
+  } else {
+    printf("No match!\n");
+  }
 
   return 0;
 }
