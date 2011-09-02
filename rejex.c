@@ -40,8 +40,7 @@ void replace_match(char *result, char *string, char *replace, int match_len, int
   memcpy(cpy_start, replace, replace_len);
   cpy_start += replace_len;
   char *after_match = string + match_index + match_len;
-  int remaining_len = strlen(string) - match_index - match_len;
-  memcpy(cpy_start, after_match, remaining_len);
+  strcpy(cpy_start, after_match);
 }
 
 int main(int argc, char *argv[]) {
