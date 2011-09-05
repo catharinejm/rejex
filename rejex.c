@@ -5,32 +5,43 @@
 #include <stdargs.h>
 
 struct State {
-  bool(transition_fn*(char cur, ...));
+  bool(transition_fn*(char **cur, ...));
   struct State *next_state;
 }
 
 struct State END_STATE;
 
-bool dot_matcher(char cur, ...) {
+bool dot_matcher(char **cur, ...) {
+  ++(*cur);
   return true;
 }
 
-bool lit_matcher(char cur, ...) {
+bool lit_matcher(char **cur, ...) {
   va_list arg_list;
   char re_cur = va_arg(arg_list, char);
   va_end(arg_list);
 
-  return cur == re_cur;
+  bool is_match;
+  if (**cur == re_cur) {
+    is_match = true;
+    ++(*cur);
+  } else 
+    is_match = false;
+  return is_match;
 }
 
-bool(normal_match*(char cur, ...))(char re_cur) {
-  if (**re_cur == '.')
+bool(normal_match*(char **cur, ...))(char re_cur) {
+  if (re_cur == '.')
     return dot_matcher;
   else
     return lit_matcher;
 }
 
-bool(qmark_match*(char cur, ...))(char re_cur) {
+bool(qmark_match*(char **cur, ...))(char re_cur) {
+  if (re_cur == '.')
+    return qm_dot_matcher;
+  else
+    return qm_lit_matcher;
 }
 
 struct State *normal_state(struct State *state, char **re_cur) {
