@@ -2,85 +2,65 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdargs.h>
 
-bool is_match(char *input, char *regex) {
-  if (strlen(regex) < 1) return false;
-
-  char *cur = input, *tok1 = regex, *tok2 = regex+1;
-  bool matches = true, escaped = false;
-  while(matches && *tok2) {
-    if ('\\' == *tok1) {
-      if (escaped) {
-        matches = '\\' == *cur;
-        ++cur;
-      }
-
-      escaped = !escaped;
-
-      ++tok1;
-      ++tok2;
-    } else if ('?' == *tok2) {
-      if (*cur == *tok1) ++cur;
-      tok1 += 2;
-      tok2 += 2;
-    } else if ('*' == *tok2) {
-      if (*cur == *tok1) ++cur;
-      else {
-        tok1 += 2;
-        tok2 += 2;
-      }
-    } else {
-      matches = *cur == *tok1;
-      if (*cur) ++cur;
-
-      ++tok1;
-      ++tok2;
-    }
-  }
-
-  matches = *cur == *tok1;
-
-  return matches;
+struct State {
+  bool(transition_fn*(char cur, ...));
+  struct State *next_state;
 }
 
-int find_match_index(char *string, char *match) {
-  int m_idx = -1;
+struct State END_STATE;
 
-  char *s_cur, *m_cur;
-  bool matched = false, in_match = false;
-  for (s_cur = string, m_cur = match;
-      *s_cur != '\0' && !matched;
-      ++s_cur) {
-
-  if (*m_cur == '.' || *m_cur == *s_cur) {
-      if (!in_match) {
-        m_idx = s_cur - string;
-        in_match = true;
-      }
-
-      ++m_cur;
-
-      if (*m_cur == '\0') matched = true;
-    } else if (in_match) {
-      in_match = false;
-      m_cur = match;
-      m_idx = -1;
-    }
-  }
-
-  if (!matched) m_idx = -1;
-
-  return m_idx;
+bool dot_matcher(char cur, ...) {
+  return true;
 }
 
-void replace_at_index(char *result, char *string, char *replace, int match_index, int match_len) {
-  memset(result, 0, sizeof(result));
-  memcpy(result, string, match_index);
+bool lit_matcher(char cur, ...) {
+  va_list arg_list;
+  char re_cur = va_arg(arg_list, char);
+  va_end(arg_list);
 
-  strcat(result, replace);
+  return cur == re_cur;
+}
 
-  char *after_match = string + match_index + match_len;
-  strcat(result, after_match);
+bool(normal_match*(char cur, ...))(char re_cur) {
+  if (**re_cur == '.')
+    return dot_matcher;
+  else
+    return lit_matcher;
+}
+
+bool(qmark_match*(char cur, ...))(char re_cur) {
+}
+
+struct State *normal_state(struct State *state, char **re_cur) {
+  state->next_state = malloc(sizeof(struct State));
+
+  if (*(*re_cur+1) == '?') {
+    state->transition_fn = qmark_match(**re_cur);
+    *re_cur += 2;
+  } else if (*(*re_cur+1) == '*') {
+    state->transition_fn = star_match(**re_cur);
+    *re_cur += 2;
+  } else {
+    state->transition_fn = normal_match(**re_cur);
+    ++(*re_cur);
+  }
+  return state->next_state;
+}
+
+void build_regex(struct State *result, char *regex) {
+  char *re_cur = regex;
+  
+  result = malloc(sizeof(struct State));
+  struct State cur_state = result;
+
+  for(; *re_cur != '\0'; ++re_cur) {
+    if (*re_cur == '\\')
+      cur_state = escape_state(cur_state, &re_cur);
+    else
+      cur_state = normal_state(cur_state, &re_cur);
+  }
 }
 
 int main(int argc, char *argv[]) {
